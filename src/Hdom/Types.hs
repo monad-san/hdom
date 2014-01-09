@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Hdom.Types where
 
+import qualified Data.IntMap as IM
 import qualified Data.Map as M
 import Control.Lens
 import Control.Monad.State
@@ -51,7 +52,7 @@ makeLenses ''Player
 
 data Game = Game {
   _field :: Field,
-  _players :: M.Map Int Player,
+  _players :: M.IntMap Player,
   _active_player :: (Int, Player)
   } deriving (Show, Eq)
 makeLenses ''Game
