@@ -1,3 +1,3 @@
 module Hdom where
 
-import Hdom.Internal
+import Hdom.Types
