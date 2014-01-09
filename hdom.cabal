@@ -1,0 +1,35 @@
+Name:                   hdom
+Version:                0.0.0
+Author:                 Yamada Satoshi <mount.sa@gmail.com>
+Maintainer:             Yamada Satoshi <mount.sa@gmail.com>
+License:                BSD3
+License-File:           LICENSE
+-- Synopsis:               
+-- Description:            
+Cabal-Version:          >= 1.10
+Build-Type:             Simple
+
+Library
+  Default-Language:     Haskell2010
+  HS-Source-Dirs:       src
+  GHC-Options:          -Wall
+  Exposed-Modules:      Hdom
+  Other-Modules:        Hdom.Types
+  Build-Depends:        base >= 4 && < 5
+                      , containers >= 0.5
+                      , mtl >= 2.1
+                      , lens >= 3.10
+
+Test-Suite spec
+  Type:                 exitcode-stdio-1.0
+  Default-Language:     Haskell2010
+  Hs-Source-Dirs:       src
+                      , test
+  Ghc-Options:          -Wall
+  Main-Is:              Spec.hs
+  Build-Depends:        base
+                      , hspec
+
+Source-Repository head
+  Type:                 git
+--  Location:             
