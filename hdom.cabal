@@ -19,6 +19,7 @@ Library
                       , containers >= 0.5
                       , mtl >= 2.1
                       , lens >= 3.10
+                      , free >= 4.2
 
 Test-Suite spec
   Type:                 exitcode-stdio-1.0
