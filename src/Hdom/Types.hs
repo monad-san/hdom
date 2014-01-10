@@ -52,24 +52,36 @@ makeLenses ''Player
 
 data Game = Game {
   _field :: Field,
-  _players :: M.IntMap Player,
+  _players :: IM.IntMap Player,
   _active_player :: (Int, Player)
   } deriving (Show, Eq)
 makeLenses ''Game
 
 
-data ActionCard = ActionCard { _actionCard :: Card, _effect :: StateT Game IO () }
+data ActionCard = ActionCard {
+  _actionCard :: Card,
+  _effect :: StateT Game IO ()
+  }
 makeLenses ''ActionCard
 instance HasCard ActionCard where
   card = actionCard
 
-data TreasureCard = TreasureCard { _treasureCard :: Card, _coins :: Int }
+data TreasureCard = TreasureCard {
+  _treasureCard :: Card,
+  _coins :: Int
+  }
 makeLenses ''TreasureCard
 instance HasCard TreasureCard where
   card = treasureCard
 
-data VPCard = VictoryCard { _vpCard :: Card, _points :: Int }
-            | CurseCard { _vpCard :: Card, _points :: Int }
+data VPCard = VictoryCard {
+  _vpCard :: Card,
+  _points :: Int
+  }
+            | CurseCard {
+  _vpCard :: Card,
+  _points :: Int
+  }
 makeLenses ''VPCard
 instance HasCard VPCard where
   card = vpCard
