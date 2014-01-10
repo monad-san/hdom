@@ -15,9 +15,9 @@ data Card = Card {
   _costs :: Int,
   _cardRole :: CardRole
   } deriving (Eq, Ord)
-instance Show Card where
-  show c = (_cardName c)
 makeClassy ''Card
+instance Show Card where
+  show c = c^.cardName
 
 data Turn = Turn {
   _money :: Int,
@@ -43,11 +43,11 @@ data Player = Player {
   _pin :: (String -> IO String),
   _pout :: (String -> IO ())
   }
-instance Show Player where
-  show c = show $ _turn c
-instance Eq Player where
-  (==) a b = (_nick a) == (_nick b) && (_turn a) == (_turn b)
 makeLenses ''Player
+instance Show Player where
+  show c = c^.(turn.(to show))
+instance Eq Player where
+  (==) a b = a^.nick == b^.nick
 
 
 data Game = Game {
@@ -74,11 +74,8 @@ makeLenses ''TreasureCard
 instance HasCard TreasureCard where
   card = treasureCard
 
-data VPCard = VictoryCard {
-  _vpCard :: Card,
-  _points :: Int
-  }
-            | CurseCard {
+data VPCard = CurseCard { _vpCard :: Card, _points :: Int }
+            | VictoryCard {
   _vpCard :: Card,
   _points :: Int
   }
