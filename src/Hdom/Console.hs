@@ -19,6 +19,7 @@ type Console = F ConsoleF
 
 notice ns s = wrap $ Notice ns s $ return ()
 select ns s = wrap $ Select ns s return
+liftIO m = wrap.LiftIO $ fmap return m
 
 runConsole :: IM.IntMap Player -> Console a -> IO a
 runConsole ps m_ = runF m_ return d where
