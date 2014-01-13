@@ -40,7 +40,7 @@ makeLenses ''Field
 data Player = Player {
   _nick :: String,
   _turn :: Turn,
-  _pin :: (String -> IO String),
+  _pin :: IO String,
   _pout :: (String -> IO ())
   }
 makeLenses ''Player
