@@ -40,7 +40,7 @@ data Player = Player {
   } deriving (Eq)
 makeLenses ''Player
 instance Show Player where
-  show c = _nick c
+  show = _nick
 
 
 data Game = Game {
@@ -84,7 +84,7 @@ makeFields ''Victory
 
 
 data CardRole = Basic | Kingdom
-              deriving (Eq, Ord)
+              deriving (Eq, Ord, Show)
 
 data CardAttr = CardAttr {
   _costs :: Int,
@@ -96,6 +96,19 @@ data CardAttr = CardAttr {
                 )
   }
 makeLenses ''CardAttr
+instance Show CardAttr where
+  show c = "CardAttr " ++ show (c^.costs) ++ " " ++ show (c^.cardRole)
 
 type CardInfo = M.Map String CardAttr
+
+actionCard :: Lens' CardAttr (Maybe ActionCard)
+actionCard = attribute._1
+
+treasure :: Lens' CardAttr (Maybe Treasure)
+treasure = attribute._2
+
+victory :: Lens' CardAttr (Maybe Victory)
+victory = attribute._3
+
+--curse = attribute._4
 
