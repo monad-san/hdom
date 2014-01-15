@@ -12,6 +12,8 @@ import Hdom.Console(Console)
 
 newtype Card = Card String
              deriving (Eq, Ord, Show)
+instance IsString Card where
+  fromString s = Card s
 makeWrapped ''Card
 
 data Turn = Turn {
