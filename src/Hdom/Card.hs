@@ -27,8 +27,6 @@ extractCards' ci n cs = partition (pickCard ci n) cs
 
 extractCards = extractCards' cardMap
 
-f :: (CardType ct) => Maybe ct -> Maybe String
-f = (>>=(\ct -> Just $ cardType ct))
 
 instance Default CardAttr where
   def = CardAttr 0 Basic (Nothing, Nothing, Nothing, Nothing)
