@@ -59,20 +59,22 @@ class CardType ct where
 data ActionCard = ActionCard {
   _effect :: GameState ()
   }
-makeLenses ''ActionCard
 instance CardType ActionCard where
   cardType _ = "Action"
+instance Show ActionCard where
+  show = cardType
+makeLenses ''ActionCard
 
 data Treasure = Treasure {
   _coins :: Int
-  }
-makeLenses ''Treasure
+  } deriving (Show)
 instance CardType Treasure where
   cardType _ = "Treasure"
+makeLenses ''Treasure
 
-newtype Curse = Curse { _curseVP :: Int }
+newtype Curse = Curse { _curseVP :: Int } deriving (Show)
 instance CardType Curse where
-  cardType _ = "Curse"
+  cardType = show
 makeFields ''Curse
 
 data Victory = Victory {
@@ -80,6 +82,8 @@ data Victory = Victory {
   }
 instance CardType Victory where
   cardType _ = "Victory"
+instance Show Victory where
+  show = cardType
 makeFields ''Victory
 
 
@@ -89,26 +93,25 @@ data CardRole = Basic | Kingdom
 data CardAttr = CardAttr {
   _costs :: Int,
   _cardRole :: CardRole,
-  _attribute :: ( Maybe ActionCard
+  _attributes :: ( Maybe ActionCard
                 , Maybe Treasure
                 , Maybe Victory
                 , Maybe Curse
                 )
-  }
+  } deriving (Show)
 makeLenses ''CardAttr
-instance Show CardAttr where
-  show c = "CardAttr " ++ show (c^.costs) ++ " " ++ show (c^.cardRole)
 
 type CardInfo = M.Map String CardAttr
 
 actionCard :: Lens' CardAttr (Maybe ActionCard)
-actionCard = attribute._1
+actionCard = attributes._1
 
 treasure :: Lens' CardAttr (Maybe Treasure)
-treasure = attribute._2
+treasure = attributes._2
 
 victory :: Lens' CardAttr (Maybe Victory)
-victory = attribute._3
+victory = attributes._3
 
---curse = attribute._4
+curse :: Lens' CardAttr (Maybe Curse)
+curse = attributes._4
 
