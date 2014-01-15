@@ -1,7 +1,8 @@
-{-# LANGUAGE TemplateHaskell, FunctionalDependencies #-}
+{-# LANGUAGE TemplateHaskell, FunctionalDependencies, OverloadedStrings #-}
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
 module Hdom.Types where
 
+import Data.String(IsString,fromString)
 import qualified Data.IntMap as IM
 import qualified Data.Map as M
 import Control.Lens
@@ -11,9 +12,11 @@ import Hdom.Console(Console)
 
 
 newtype Card = Card String
-             deriving (Eq, Ord, Show)
+             deriving (Eq, Ord)
 instance IsString Card where
   fromString s = Card s
+instance Show Card where
+  show (Card s) = s  
 makeWrapped ''Card
 
 data Turn = Turn {
