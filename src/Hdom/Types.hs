@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, FunctionalDependencies #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, MultiParamTypeClasses #-}
 module Hdom.Types where
 
 import qualified Data.IntMap as IM
@@ -6,18 +7,12 @@ import qualified Data.Map as M
 import Control.Lens
 import Control.Monad.State
 
-data CardRole = Basic | Kingdom
-              deriving (Eq, Ord)
-makeLenses ''CardRole
+import Hdom.Console(Console)
 
-data Card = Card {
-  _cardName :: String,
-  _costs :: Int,
-  _cardRole :: CardRole
-  } deriving (Eq, Ord)
-makeClassy ''Card
-instance Show Card where
-  show c = c^.cardName
+
+newtype Card = Card String
+             deriving (Eq, Ord, Show)
+makeWrapped ''Card
 
 data Turn = Turn {
   _money :: Int,
@@ -30,6 +25,8 @@ data Turn = Turn {
   } deriving (Show, Eq)
 makeLenses ''Turn
 
+type TurnState = StateT Turn Console
+
 
 data Field = Field {
   _cards :: M.Map Card Int,
@@ -39,47 +36,66 @@ makeLenses ''Field
 
 data Player = Player {
   _nick :: String,
-  _turn :: Turn,
-  _pin :: IO String,
-  _pout :: (String -> IO ())
-  }
+  _turn :: Turn
+  } deriving (Eq)
 makeLenses ''Player
 instance Show Player where
-  show c = c^.(turn.(to show))
-instance Eq Player where
-  (==) a b = a^.nick == b^.nick
+  show c = _nick c
 
 
 data Game = Game {
   _field :: Field,
-  _players :: IM.IntMap Player,
-  _active_player :: (Int, Player)
+  _active_player :: (IM.Key,Player),
+  _others :: IM.IntMap Player
   } deriving (Show, Eq)
 makeLenses ''Game
 
+type GameState = StateT Game Console
+
+
+class CardType ct where
+  cardType :: ct -> String
 
 data ActionCard = ActionCard {
-  _actionCard :: Card,
-  _effect :: StateT Game IO ()
+  _effect :: GameState ()
   }
 makeLenses ''ActionCard
-instance HasCard ActionCard where
-  card = actionCard
+instance CardType ActionCard where
+  cardType _ = "Action"
 
-data TreasureCard = TreasureCard {
-  _treasureCard :: Card,
+data Treasure = Treasure {
   _coins :: Int
   }
-makeLenses ''TreasureCard
-instance HasCard TreasureCard where
-  card = treasureCard
+makeLenses ''Treasure
+instance CardType Treasure where
+  cardType _ = "Treasure"
 
-data VPCard = CurseCard { _vpCard :: Card, _points :: Int }
-            | VictoryCard {
-  _vpCard :: Card,
-  _points :: Int
+newtype Curse = Curse { _curseVP :: Int }
+instance CardType Curse where
+  cardType _ = "Curse"
+makeFields ''Curse
+
+data Victory = Victory {
+  _victoryVP :: Int
   }
-makeLenses ''VPCard
-instance HasCard VPCard where
-  card = vpCard
+instance CardType Victory where
+  cardType _ = "Victory"
+makeFields ''Victory
+
+
+data CardRole = Basic | Kingdom
+              deriving (Eq, Ord)
+
+data CardAttr = CardAttr {
+  _costs :: Int,
+  _cardRole :: CardRole,
+  _attribute :: ( Maybe ActionCard
+                , Maybe Treasure
+                , Maybe Victory
+                , Maybe Curse
+                )
+  }
+makeLenses ''CardAttr
+
+type CardInfo = M.Map String CardAttr
 

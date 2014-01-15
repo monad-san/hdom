@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, DeriveFunctor #-}
+{-# LANGUAGE TemplateHaskell, DeriveFunctor, TupleSections #-}
 module Hdom.Console where
 
 import Control.Monad(join)
@@ -20,6 +20,7 @@ data ConsoleF a = Notice [Int] String a
 
 type Console = F ConsoleF
 
+
 notice :: [Int] -> String -> Console ()
 notice ns s = wrap $ Notice ns s $ return ()
 
@@ -31,6 +32,7 @@ select ns s = wrap $ Select ns s return
 
 liftIO :: IO a -> Console a
 liftIO m = wrap.LiftIO $ fmap return m
+
 
 runConsole :: IM.IntMap PlayerIO -> Console a -> IO a
 runConsole ps m_ = runF m_ return d where
@@ -51,5 +53,5 @@ runConsole ps m_ = runF m_ return d where
   
   sps :: [Int] -> IM.IntMap PlayerIO
   sps ns = IM.fromList $ catMaybes
-           $ map (\n -> (IM.lookup n ps)>>=(\p -> return (n,p))) ns
+           $ map (\n -> (IM.lookup n ps)>>=(return.(n,))) ns
 
