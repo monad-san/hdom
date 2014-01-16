@@ -71,9 +71,6 @@ buy = do
           then askCard
           else liftT r
  
-      liftT :: (Monad m) => Maybe a -> MaybeT m a
-      liftT = MaybeT . return
-      
       checkBuys :: Game -> Maybe ()
       checkBuys g = guard $ g^.my.turn.buys > 0
 
@@ -83,15 +80,9 @@ buy = do
         n <- restOfCards fcs c
         guard $ m >= (ca^.costs) && n > 0
 
-      restOfCards :: FieldMap -> Card -> Maybe Int
-      restOfCards fcs c = M.lookup c fcs
-
-      selectCard :: M.Map Card Int -> String -> Maybe Card
-      selectCard cs s = let c = Card s
-                        in (cs^.(at c))>>=(\n -> if n > 0 then Just c else Nothing)
-
 cleanup :: GameState ()
 cleanup = do
+  lift $ noticeAll "Cleanup Phase..."
   t <- use (my.turn)
   post_t <- lift $ flip execStateT t $ do
     discardCards
@@ -101,9 +92,13 @@ cleanup = do
 
 -- Util
 
-me :: Lens' Game Int
-me = active_player._1
+liftT :: (Monad m) => Maybe a -> MaybeT m a
+liftT = MaybeT . return
+      
+restOfCards :: FieldMap -> Card -> Maybe Int
+restOfCards fcs c = M.lookup c fcs
 
-my :: Lens' Game Player
-my = active_player._2
+selectCard :: M.Map Card Int -> String -> Maybe Card
+selectCard cs s = let c = Card s
+                  in (cs^.(at c))>>=(\n -> if n > 0 then Just c else Nothing)
 

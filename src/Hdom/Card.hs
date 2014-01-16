@@ -40,6 +40,9 @@ getCardAttr = getCardAttr' cardMap
 instance Default CardAttr where
   def = CardAttr 0 Basic (Nothing, Nothing, Nothing, Nothing)
 
+kingdom = def & cardRole .~ Kingdom
+
+
 copper   = def & treasure ?~ (Treasure { _coins = 1 })
 silver   = def & costs .~ 3
                & treasure ?~ (Treasure { _coins = 2 })

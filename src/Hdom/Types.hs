@@ -59,6 +59,12 @@ makeLenses ''Game
 
 type GameState = StateT Game Console
 
+me :: Lens' Game Int
+me = active_player._1
+
+my :: Lens' Game Player
+my = active_player._2
+
 
 class CardType ct where
   cardType :: ct -> String
