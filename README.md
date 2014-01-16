@@ -1,6 +1,8 @@
 # hdom
 
-Dominion in Haskell (Using Lens)
+Dominion in Haskell 
+
+Using Lens and Free
 
 ## Installation
 

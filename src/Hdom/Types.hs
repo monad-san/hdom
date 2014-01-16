@@ -33,8 +33,10 @@ makeLenses ''Turn
 type TurnState = StateT Turn Console
 
 
+type FieldMap = M.Map Card Int
+
 data Field = Field {
-  _cards :: M.Map Card Int,
+  _cards :: FieldMap,
   _trashed :: [Card]
   } deriving (Show, Eq)
 makeLenses ''Field
@@ -106,7 +108,7 @@ data CardAttr = CardAttr {
   } deriving (Show)
 makeLenses ''CardAttr
 
-type CardInfo = M.Map String CardAttr
+type CardInfo = M.Map Card CardAttr
 
 actionCard :: Lens' CardAttr (Maybe ActionCard)
 actionCard = attributes._1

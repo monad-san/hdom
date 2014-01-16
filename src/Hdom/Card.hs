@@ -1,8 +1,8 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, OverloadedStrings #-}
 module Hdom.Card where
 
 import qualified Data.Map as M
-import Data.Maybe(catMaybes)
+import Data.Maybe(catMaybes,fromMaybe)
 import Data.List(partition)
 import Control.Monad.State
 import Control.Lens
@@ -11,7 +11,7 @@ import Data.Default
 import Hdom.Types
 
 pickCard :: CardInfo -> String -> Card -> Bool
-pickCard ci n (Card c) = any (==n) $ verify (ci^.(at c))
+pickCard ci n c = any (==n) $ verify (ci^.(at c))
   where
     verify :: Maybe CardAttr -> [String]
     verify (Just ca) = catMaybes $ (getct (ca^.attributes))^..each
@@ -27,6 +27,15 @@ extractCards' ci n cs = partition (pickCard ci n) cs
 
 extractCards = extractCards' cardMap
 
+gainCoins' :: CardInfo -> Card -> Int
+gainCoins' ci c = fromMaybe 0 $ (ci^.(at c))>>=(^.treasure)>>=(\t -> return $ t^.coins)
+
+gainCoins = gainCoins' cardMap
+
+getCardAttr' :: CardInfo -> Card -> Maybe CardAttr
+getCardAttr' ci c = ci^.(at c)
+
+getCardAttr = getCardAttr' cardMap
 
 instance Default CardAttr where
   def = CardAttr 0 Basic (Nothing, Nothing, Nothing, Nothing)
@@ -45,7 +54,7 @@ province = def & costs .~ 8
 curse'   = def & curse ?~ (Curse { _curseVP = -1 })
 
 
-cardMap :: M.Map String CardAttr
+cardMap :: CardInfo
 cardMap = M.fromList [("Copper", copper),
                       ("Silver", silver),
                       ("Gold", gold),

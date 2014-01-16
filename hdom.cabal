@@ -1,5 +1,5 @@
 Name:                   hdom
-Version:                0.0.0
+Version:                0.0.1
 Author:                 Yamada Satoshi <mount.sa@gmail.com>
 Maintainer:             Yamada Satoshi <mount.sa@gmail.com>
 License:                BSD3
@@ -19,9 +19,10 @@ Library
                       , containers >= 0.5
                       , random >= 1.0
                       , mtl >= 2.1
+                      , transformers >= 0.3
+                      , data-default >= 0.5
                       , lens >= 3.10
                       , free >= 4.2
-                      , data-default >= 0.5
 
 Test-Suite spec
   Type:                 exitcode-stdio-1.0
