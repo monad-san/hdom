@@ -1,5 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Hdom.Game where
+module Hdom.Game
+       ( playTurn,
+         action,
+         buy,
+         cleanup
+       ) where
 
 import qualified Data.IntMap as IM
 import qualified Data.Map as M
@@ -41,38 +46,48 @@ buy = do
 
       buying :: MaybeT GameState ()
       buying = do
-        g <- lift $ get
-        lift $ lift $ notice [g^.me]
-          $ "Money: " ++ show (g^.my.turn.money) ++ " / Buys: " ++ show (g^.my.turn.buys)
-        liftT $ checkBuys g
-        c <- askCard
+        checkBuys
+        lift $ showBuyInfo
+        c <- MaybeT $ selectCard
+        checkBuyable c
+        gainCard c
+
+      checkBuys :: MaybeT GameState ()
+      checkBuys = MaybeT $ uses (my.turn.buys) checkRemain
+
+      showBuyInfo :: GameState ()
+      showBuyInfo = do
+        myNo <- use me
+        b <- use $ my.turn.buys
+        m <- use $ my.turn.money
+        lift $ notice [myNo] $ "Money: " ++ show m ++ " / Buys: " ++ show b
+
+      selectCard :: GameState (Maybe Card)
+      selectCard = do
+        myNo <- use me
+        rfs <- use $ field.cards
+        let fcards = M.filter (>0) rfs
+        let fcl = (Nothing,"End Buy") : zip
+                  (fmap Just $ M.keys fcards)
+                  (M.elems $ M.mapWithKey (\(Card k) a -> concat [k,"(",show a,")"]) fcards)
+        out <- lift $ select [myNo] "Buy Card ?" $ map (^._2) fcl
+        return $ fst $ fcl !! (out IM.! myNo)
+
+      checkBuyable :: Card -> MaybeT GameState ()
+      checkBuyable c = do
+        fcards <- lift $ use $ field.cards
+        gcoins <- lift $ use $ my.turn.money
+        liftT $ isBuyable fcards gcoins c
+
+      gainCard :: Card -> MaybeT GameState ()
+      gainCard c = do
         ca <- liftT $ getCardAttr c
         lift $ do
           my.turn.discards %= (c:)
           my.turn.buys -= 1
           my.turn.money -= ca^.costs
-        n <- liftT $ restOfCards (g^.field.cards) c
+        n <- MaybeT $ uses (field.cards) $ flip restOfCards c
         lift $ field.cards.(at c) ?= n - 1
-
-      askCard :: MaybeT GameState Card
-      askCard = do
-        myNo <- use me
-        fcs <- use $ field.cards
-        ms <- use $ my.turn.money
-        ss <- lift $ lift $ select [myNo] "Buy Card ?"
-        cs <- liftT $ if ss == IM.singleton myNo ""
-                      then Nothing
-                      else ss^.(at myNo)
-        let r = do
-              c <- selectCard fcs cs
-              isBuyable fcs ms c
-              return c
-        if r == Nothing
-          then askCard
-          else liftT r
- 
-      checkBuys :: Game -> Maybe ()
-      checkBuys g = guard $ g^.my.turn.buys > 0
 
       isBuyable :: FieldMap -> Int -> Card -> Maybe ()
       isBuyable fcs m c = do
@@ -98,7 +113,6 @@ liftT = MaybeT . return
 restOfCards :: FieldMap -> Card -> Maybe Int
 restOfCards fcs c = M.lookup c fcs
 
-selectCard :: M.Map Card Int -> String -> Maybe Card
-selectCard cs s = let c = Card s
-                  in (cs^.(at c))>>=(\n -> if n > 0 then Just c else Nothing)
+checkRemain :: Int -> Maybe ()
+checkRemain r = guard $ r > 0
 

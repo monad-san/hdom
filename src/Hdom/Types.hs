@@ -53,7 +53,7 @@ instance Show Player where
 data Game = Game {
   _field :: Field,
   _active_player :: (IM.Key,Player),
-  _others :: IM.IntMap Player
+  _players :: IM.IntMap Player
   } deriving (Show, Eq)
 makeLenses ''Game
 
@@ -66,8 +66,8 @@ my :: Lens' Game Player
 my = active_player._2
 
 
-class CardType ct where
-  cardType :: ct -> String
+class CardType c where
+  cardType :: c -> String
 
 data ActionCard = ActionCard {
   _effect :: GameState ()

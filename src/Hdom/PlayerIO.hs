@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Hdom.PlayerIO where
 
+import Data.IntMap(Key)
 import Control.Lens(makeLenses)
 
 data PlayerIO = PlayerIO {
@@ -8,4 +9,6 @@ data PlayerIO = PlayerIO {
   _pin :: IO String
   }
 makeLenses ''PlayerIO
+
+type Keys = [Key]
 
