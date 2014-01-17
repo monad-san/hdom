@@ -16,14 +16,16 @@ market   = kingdom & costs .~ 5
       my.turn.actions += 1
       my.turn.coins += 1
       my.turn.buys += 1
-      uses (my.turn) (lift.(execStateT draw))
+      new <- uses (my.turn) (lift.(execStateT draw))
+      my.turn .= new
 
 village  = kingdom & costs .~ 3
                    & actionCard ?~ (ActionCard { _effect = village' })
   where
     village' = do
       my.turn.actions += 2
-      uses (my.turn) (lift.(execStateT draw))
+      new <- uses (my.turn) (lift.(execStateT draw))
+      my.turn .= new
 
 festival = kingdom & costs .~ 5
                    & actionCard ?~ (ActionCard { _effect = festival' })
