@@ -6,6 +6,7 @@ module Hdom.Game
          cleanup
        ) where
 
+import Data.List(delete)
 import qualified Data.IntMap as IM
 import qualified Data.Map as M
 import Control.Lens
@@ -13,7 +14,7 @@ import Control.Monad.Trans.Maybe
 import Control.Monad.State
 
 import Hdom.Types
-import Hdom.Console
+import qualified Hdom.Console as C
 import Hdom.Card
 import Hdom.Turn
 
@@ -26,18 +27,60 @@ playTurn = do
   cleanup
 
 action :: GameState () -- (stub) --
-action = return ()
+action = do
+  lift $ C.noticeAll "Action Phase: Start."
+  runMaybeT $ sequence_ $ repeat playAction
+  lift $ C.noticeAll "Action Phase: Done."
+    where
+      playAction :: MaybeT GameState ()
+      playAction = do
+        checkActions
+        lift $ showActionInfo
+        c <- MaybeT $ selectActionCard
+        execAction c
+
+      checkActions :: MaybeT GameState ()
+      checkActions = MaybeT $ do
+        uses (my.turn.actions) checkRemain
+        uses (my.turn.hands) (checkRemain.length.fst.(extractCards "Action"))
+
+      showActionInfo :: GameState ()
+      showActionInfo = do
+        myNo <- use me
+        a <- use $ my.turn.actions
+        lift $ C.notice [myNo] $ concat ["Actions: ",show a]
+
+      selectActionCard :: GameState (Maybe Card)
+      selectActionCard = do
+        myNo <- use me
+        hacs <- use $ my.turn.hands.(to $ fst.(extractCards "Action"))
+        let hcl = (Nothing,"End Action") : zip (map Just hacs) (map (op Card) hacs)
+        out <- lift $ C.select [myNo] "Play Action ?" $ map (^._2) hcl
+        return $ fst $ hcl !! (out IM.! myNo)
+
+      execAction :: Card -> MaybeT GameState ()
+      execAction c = do
+        lift $ do
+          my.turn.hands %= delete c
+          my.turn.play %= (++[c])
+          my.turn.actions -= 1
+        liftT $ do
+          ca <- getCardAttr c
+          mac <- ca^.actionCard
+          Just $ mac^.effect
+        n <- MaybeT $ uses (field.cards) $ flip restOfCards c
+        lift $ field.cards.(at c) ?= n - 1
 
 buy :: GameState ()
 buy = do
-  lift $ noticeAll "Buy Phase: Start."
+  lift $ C.noticeAll "Buy Phase: Start."
   playTreasure
   runMaybeT $ sequence_ $ repeat buying
-  lift $ noticeAll "Buy Phase: Done."
+  lift $ C.noticeAll "Buy Phase: Done."
     where
       playTreasure :: GameState ()
       playTreasure = do
-        lift $ noticeAll " - Played treasures..."
+        lift $ C.noticeAll " - Played treasures..."
         hs <- use $ my.turn.hands
         let (t,nt) = extractCards "Treasure" hs
         my.turn.hands .= nt
@@ -48,7 +91,7 @@ buy = do
       buying = do
         checkBuys
         lift $ showBuyInfo
-        c <- MaybeT $ selectCard
+        c <- MaybeT $ selectBuyCard
         checkBuyable c
         gainCard c
 
@@ -60,17 +103,17 @@ buy = do
         myNo <- use me
         b <- use $ my.turn.buys
         m <- use $ my.turn.money
-        lift $ notice [myNo] $ "Money: " ++ show m ++ " / Buys: " ++ show b
+        lift $ C.notice [myNo] $ concat ["Money: ",show m," / Buys: ",show b]
 
-      selectCard :: GameState (Maybe Card)
-      selectCard = do
+      selectBuyCard :: GameState (Maybe Card)
+      selectBuyCard = do
         myNo <- use me
         rfs <- use $ field.cards
         let fcards = M.filter (>0) rfs
         let fcl = (Nothing,"End Buy") : zip
                   (fmap Just $ M.keys fcards)
                   (M.elems $ M.mapWithKey (\(Card k) a -> concat [k,"(",show a,")"]) fcards)
-        out <- lift $ select [myNo] "Buy Card ?" $ map (^._2) fcl
+        out <- lift $ C.select [myNo] "Buy Card ?" $ map (^._2) fcl
         return $ fst $ fcl !! (out IM.! myNo)
 
       checkBuyable :: Card -> MaybeT GameState ()
@@ -97,7 +140,7 @@ buy = do
 
 cleanup :: GameState ()
 cleanup = do
-  lift $ noticeAll "Cleanup Phase..."
+  lift $ C.noticeAll "Cleanup Phase..."
   t <- use (my.turn)
   post_t <- lift $ flip execStateT t $ do
     discardCards
