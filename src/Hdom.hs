@@ -7,7 +7,7 @@ import Control.Monad.State(evalStateT)
 import Hdom.PlayerIO
 import Hdom.Console(runStdConsole)
 import Hdom.Types
-import Hdom.Field(noneKingdomCardsField)
+import Hdom.Field
 import Hdom.Turn(initial)
 import Hdom.Game
 
@@ -22,10 +22,11 @@ selfIO :: PlayerIO
 selfIO = PlayerIO putStrLn getLine
 
 game :: Game
-game = Game (noneKingdomCardsField 1) (1,self) (fromList [])
+game = Game (basicCardsField 1) (1,self) (fromList [])
 
 main :: IO ()
 main = runStdConsole (fromList [(1,selfIO)]) $ flip evalStateT game $ do
   cleanup
   sequence_ $ repeat playTurn
   return ()
+

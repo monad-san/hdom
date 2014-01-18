@@ -15,7 +15,7 @@ import Control.Monad.State
 
 import Hdom.Types
 import qualified Hdom.Console as C
-import Hdom.Card
+import Hdom.CardInfo
 import Hdom.Turn
 
 -- ABC
@@ -26,7 +26,7 @@ playTurn = do
   buy
   cleanup
 
-action :: GameState () -- (stub) --
+action :: GameState ()
 action = do
   lift $ C.noticeAll "Action Phase: Start."
   runMaybeT $ sequence_ $ repeat playAction
