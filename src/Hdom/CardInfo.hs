@@ -49,7 +49,7 @@ basicCI = M.fromList [("Copper", copper),
                       ("Curse", curse')]
 
 baseSet :: CardInfo
-baseSet = M.fromList [ ("Market", market)
-                      , ("Village", village)
-                      , ("Festival", festival)]
+baseSet = M.fromList [("Market", market),
+                      ("Village", village),
+                      ("Festival", festival)]
 

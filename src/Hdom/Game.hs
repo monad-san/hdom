@@ -6,6 +6,7 @@ module Hdom.Game
          cleanup
        ) where
 
+import Data.Maybe(isJust)
 import Data.List(delete)
 import qualified Data.IntMap as IM
 import qualified Data.Map as M
@@ -64,12 +65,11 @@ action = do
           my.turn.hands %= delete c
           my.turn.play %= (++[c])
           my.turn.actions -= 1
-        liftT $ do
+        exe <- liftT $ do
           ca <- getCardAttr c
           mac <- ca^.actionCard
           Just $ mac^.effect
-        n <- MaybeT $ uses (field.cards) $ flip restOfCards c
-        lift $ field.cards.(at c) ?= n - 1
+        lift $ exe
 
 buy :: GameState ()
 buy = do
@@ -84,7 +84,7 @@ buy = do
         hs <- use $ my.turn.hands
         let (t,nt) = extractCards "Treasure" hs
         my.turn.hands .= nt
-        my.turn.play .= t
+        my.turn.play %= (++t)
         my.turn.money += (sum $ map gainCoins t)
 
       buying :: MaybeT GameState ()
@@ -120,10 +120,20 @@ buy = do
       checkBuyable c = do
         fcards <- lift $ use $ field.cards
         gcoins <- lift $ use $ my.turn.money
-        liftT $ isBuyable fcards gcoins c
+        if isJust $ maybeBuyable fcards gcoins c
+          then return ()
+          else buying
+
+      maybeBuyable :: FieldMap -> Int -> Card -> Maybe ()
+      maybeBuyable fcs m c = do
+        ca <- getCardAttr c
+        n <- restOfCards fcs c
+        guard $ m >= (ca^.costs) && n > 0
 
       gainCard :: Card -> MaybeT GameState ()
       gainCard c = do
+        myNo <- lift $ use me
+        lift $ lift $ C.notice [myNo] $ "Bought :" ++ (op Card c)
         ca <- liftT $ getCardAttr c
         lift $ do
           my.turn.discards %= (c:)
@@ -131,12 +141,6 @@ buy = do
           my.turn.money -= ca^.costs
         n <- MaybeT $ uses (field.cards) $ flip restOfCards c
         lift $ field.cards.(at c) ?= n - 1
-
-      isBuyable :: FieldMap -> Int -> Card -> Maybe ()
-      isBuyable fcs m c = do
-        ca <- getCardAttr c
-        n <- restOfCards fcs c
-        guard $ m >= (ca^.costs) && n > 0
 
 cleanup :: GameState ()
 cleanup = do
